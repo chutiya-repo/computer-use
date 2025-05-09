@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
 import { streamText, UIMessage } from "ai";
 import { killDesktop } from "@/lib/e2b/utils";
 import { bashTool, computerTool } from "@/lib/e2b/tool";
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     await req.json();
   try {
     const result = streamText({
-      model: anthropic("claude-3-7-sonnet-20250219"), // Using Sonnet for computer use
+      model: google("gemini-2.0-flash-lite"), // Using Google Gemini 2.0 Flash Lite for computer use
       system:
         "You are a helpful assistant with access to a computer. " +
         "Use the computer tool to help the user with their requests. " +
@@ -22,7 +22,12 @@ export async function POST(req: Request) {
       messages: prunedMessages(messages),
       tools: { computer: computerTool(sandboxId), bash: bashTool(sandboxId) },
       providerOptions: {
-        anthropic: { cacheControl: { type: "ephemeral" } },
+        google: { safetySettings: [
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+        ]},
       },
     });
 
